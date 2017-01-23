@@ -1,0 +1,20 @@
+newmtl xy
+Ka 0.2 0.2 0.2
+Kd 0.2 0.2 0.2
+Ks 0.2 0.2 0.2
+illum 1
+Ns 100.0
+
+newmtl xz
+Ka 0.3 0.3 0.3
+Kd 0.3 0.3 0.3
+Ks 0.3 0.3 0.3
+illum 1
+Ns 100.0
+
+newmtl yz
+Ka 0.7 0.3 0.3
+Kd 0.7 0.3 0.3
+Ks 0.7 0.3 0.3
+illum 1
+Ns 100.0
