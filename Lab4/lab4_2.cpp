@@ -38,24 +38,35 @@ class Obj {
 	void readObj();
 	Point* getPointByIndex(int);
 	void removeDuplicateVertices();
+	void removeDuplicateFaces();
 	void outputVertices();
 	void outputFaces();
 };
 
 int main() {
-
+	
 	Obj obj;
 	obj.readObj();
+
+	set<Point*> sp;
+	set<Point*> sp2;
+
+	sp.insert(obj.vertices[1]);
+	sp.insert(obj.vertices[2]);
+	sp2.insert(obj.vertices[2]);
+	sp2.insert(obj.vertices[1]);
+		
 	obj.removeDuplicateVertices();
+	obj.removeDuplicateFaces();
 	obj.outputVertices();
 	obj.outputFaces();
 //	Point * p1 = obj.vertices[1];
 //	Face * f1 = obj.faces[6];
 //	f1->print();
-	//for (vector<Face*>::iterator fit = p1->faces.begin(); fit != p1->faces.end(); ++fit)
-	//{
-//		cout << (*fit)->id << std::endl;
-//	}
+	for (vector<Point*>::iterator pit = obj.vertices.begin(); pit != obj.vertices.end(); ++pit)
+	{
+		cout << (*pit)-> id << " : " << (*pit)->faces.size() << endl;
+	}
 
 
 
@@ -97,6 +108,33 @@ void Obj::removeDuplicateVertices()
 			vertices.erase(it);
 		}
 		else ++it;
+	}	
+}
+
+void Obj::removeDuplicateFaces()
+{
+	for (vector<Face*>::iterator fit1 = faces.begin(); fit1 != faces.end(); ++fit1)
+	{
+		for (vector<Face*>::iterator fit2 = faces.begin(); fit2 != faces.end();)
+		{
+			if (*fit1 != *fit2 && (*fit1)->equalTo(*fit2))
+			{
+				for(vector<Point*>::iterator pit = (*fit2)->vertices.begin(); pit != (*fit2)->vertices.end(); ++pit)
+				{
+					for (vector<Face*>::iterator pfit = (*pit)->faces.begin(); pfit != (*pit)->faces.end(); ++pfit)
+					{
+						if((*pfit)->equalTo(*fit2))
+						{
+							(*pit)->faces.erase(pfit);
+						}
+					}
+				}
+				faces.erase(fit2);
+				faces.erase(fit1);
+				break;
+			}
+			else ++fit2;
+		}
 	}	
 }
 
@@ -204,20 +242,12 @@ Face::Face(Point *p1, Point *p2, Point *p3, Point *p4, int id)
 
 bool Face::equalTo(Face *other)
 {
-	bool isEqual = false;
-	for (int i = 0; i < vertices.size() - 1; i++)
-	{
-		if (this->vertices[0 + i]->equalTo(other->vertices[0])
-			&& this->vertices[1 + i]->equalTo(other->vertices[1])
-			&& this->vertices[2 + i]->equalTo(other->vertices[2])
-			&& this->vertices[3 + i]->equalTo(other->vertices[3]))
-		{
-			isEqual = true;
-			break;
-		}
-	}
-	return isEqual;
+	set<Point*> v1(this->vertices.begin(), this->vertices.end());	
+	set<Point*> v2(other->vertices.begin(), other->vertices.end());	
+
+	return v1 == v2;
 }
+
 
 void Face::print()
 {
