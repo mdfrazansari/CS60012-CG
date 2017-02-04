@@ -14,6 +14,7 @@ int sortFace(const Face *f1, const Face *f2);
 int sortDeleteFace(const Face *f1, const Face *f2);
 int sortDeletePoint(const Point *p1, const Point *p2);
 
+
 class Point {
 	public:
 	int x, y, z, id, hashCode;
@@ -40,14 +41,19 @@ class Obj {
 	public:
 	vector<Point*> vertices;
 	vector<Face*> faces;
-
+	const static bool HARD_DELETE = true;
 	void readObj();
 	Point* getPointByIndex(int);
 	void removeDuplicateVertices();
 	void removeDuplicateFaces();
+	void removeVertexWithNoFace();
 	void reindexVertices();
 	void outputVertices();
 	void outputFaces();
+	void deleteFromFaces(vector<Face*>::iterator &);
+	void deleteFromVertices(vector<Point*>::iterator&);
+	int deletedVerticesCount();
+	int deletedFacesCount();
 };
 
 int main() {
@@ -65,16 +71,33 @@ int main() {
 	obj.removeDuplicateVertices();
 	cerr << "Removing duplicate faces..." << endl; 
 	obj.removeDuplicateFaces();
-//	cerr << "Reindexing vertices..." << endl; 
-//	obj.reindexVertices();
+	cerr << "Removing vertices with no faces..." << endl; 
+	obj.removeVertexWithNoFace();
+	cerr << "Reindexing vertices..." << endl; 
+	obj.reindexVertices();
 	
 	sort(obj.faces.begin(), obj.faces.end(), sortDeleteFace);
 	cout << "mtllib color.mtl" << endl;
 	obj.outputVertices();
 	obj.outputFaces();
 	
-	std::cerr << "after total vertices :" << obj.vertices.size() << endl;
-	std::cerr << "after total faces :" << obj.faces.size() << endl;
+	int deletedVertices;
+	int deletedFaces;
+	
+	if(Obj::HARD_DELETE)
+	{
+	 	deletedVertices = vSize - obj.vertices.size();
+	 	deletedFaces = fSize - obj.faces.size();
+	}
+	else
+	{
+ 		deletedVertices = obj.deletedVerticesCount();
+ 		deletedFaces = obj.deletedFacesCount();
+	}
+	std::cerr << "Deleted vertices count :" << deletedVertices << endl;
+	std::cerr << "Deleted Faces count :" << deletedFaces << endl;
+	std::cerr << "Remaining Vertices count :" << vSize - deletedVertices << endl;
+	std::cerr << "Remaining Faces count :" << fSize - deletedFaces << endl;
 
 
 return 0;
@@ -141,9 +164,7 @@ void Obj::removeDuplicateVertices()
 	{
 		if((*it)->faces.size() == 0 || toRemove[index] != 0)
 		{
-			(*it)->deleted = true;
-//			 vertices.erase(it);
-		++it;   // enable if not erasing vertices
+			deleteFromVertices(it);
 		}
 		else ++it;
 		index++;
@@ -169,7 +190,6 @@ void Obj::removeDuplicateFaces()
 						if((*pfit)->equalTo(*fit2))
 						{
 							(*pit)->faces.erase(pfit);
-							break;
 						}
 						else ++pfit;
 					}
@@ -180,17 +200,31 @@ void Obj::removeDuplicateFaces()
 			}
 		}
 	}
+
 	// remove duplicate faces
 	for(vector<Face*>::iterator it = faces.begin(); it != faces.end(); )
 	{
 		if(toRemove.find((*it)->id) != toRemove.end())
-		{	
-			(*it)->deleted = true;
-		//	faces.erase(it);
-			++it;
+		{
+			deleteFromFaces(it);
 		}
 		else ++it;
 	}	
+}
+
+void Obj::removeVertexWithNoFace()
+{
+	for (vector<Point*>::iterator it = vertices.begin(); it != vertices.end(); )
+	{
+		if((*it)->faces.size() == 0)
+		{
+			deleteFromVertices(it);
+		}
+		++it;
+	}
+
+
+
 }
 
 void Obj::readObj()
@@ -253,17 +287,23 @@ void Obj::outputVertices()
 void Obj::outputFaces()
 {
 	bool flag = false;
-	cout << "usemtl yz" << endl;
-	for(vector<Face*>::iterator it = faces.begin(); it != faces.end(); ++it)
+	cout << "usemtl xy" << endl;
+
+	for(int index = 0; index < faces.size(); index++)
 	{
-		Face *f = *it;
-		if(!flag && f->deleted)
+		if(!faces[index]->deleted)
 		{
-			cout << "usemtl xy" << endl;
-			flag = true;
+//			faces[index]->print();
 		}
-		f->print();
 	}	
+	cout << "usemtl yz" << endl;
+	for(int index = 0; index < faces.size(); index++)
+	{
+		if(faces[index]->deleted)
+		{
+			faces[index]->print();
+		}
+	}
 }
 
 Point* Obj::getPointByIndex(int index)
@@ -311,6 +351,32 @@ Face::Face(Point *p1, Point *p2, Point *p3, Point *p4, int id)
 	this->hashCode = p1->hashCode + p2->hashCode + p3->hashCode + p4->hashCode;
 }
 
+int Obj::deletedVerticesCount()
+{
+	int count = 0;
+	for(int index = 0; index < vertices.size(); index++)
+	{
+		if(vertices[index]->deleted)
+		{
+			count++;
+		}
+	}
+return count;
+}
+int Obj::deletedFacesCount()
+{	
+	int count = 0;
+	for(int index = 0; index < faces.size(); index++)
+	{
+		if(faces[index]->deleted)
+		{
+			count++;
+		}
+	}
+return count;
+
+}
+
 bool Face::equalTo(Face *other)
 {
 	if(this->vertices[0]->equalTo(other->vertices[0])
@@ -339,6 +405,33 @@ void Face::print()
 //		cout << "  " <<  this->deleted;
 		cout << endl;
 
+}
+
+void Obj::deleteFromFaces(vector<Face*>::iterator &it)
+{	
+	(*it)->deleted = true;
+	if(HARD_DELETE)
+	{
+		faces.erase(it);
+	}
+	else
+	{
+		++it;
+	}
+	
+}
+
+void Obj::deleteFromVertices(vector<Point*>::iterator &it)
+{
+	(*it)->deleted = true;
+	if(HARD_DELETE)
+	{
+		vertices.erase(it);
+	}
+	else
+	{
+		++it;
+	}
 }
 
 bool compareFace(const Face *f1, const Face *f2)

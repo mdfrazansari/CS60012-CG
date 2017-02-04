@@ -61,13 +61,13 @@ void Cube::printVertices()
 		for(int j = 0; j < 2; j++)
 			for (int k = 0; k < 2; k++)
 			{
-				cout << x+k << "  "  << y+j << " " << z-i << endl;
+				cout << "v " <<  x+k << "  "  << y+j << " " << z-i << endl;
 			}
 }
 
 void Cube::printFaces()
 {
-	int offset = id*6;
+	int offset = id*8;
 	cout << "f " << offset + 1 << "  " << offset + 2 << "  " << offset + 4 << "  " << offset + 3 << endl;
 	cout << "f " << offset + 2 << "  " << offset + 6 << "  " << offset + 8 << "  " << offset + 4 << endl;
 	cout << "f " << offset + 5 << "  " << offset + 7 << "  " << offset + 8 << "  " << offset + 6 << endl;
