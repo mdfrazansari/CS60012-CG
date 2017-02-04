@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 	
 	double *center = new double[3];
 
-	outfile << "mtllib color.mtl" << std::endl;
+//	outfile << "mtllib color.mtl" << std::endl;
 
 	for (int i = 0; i < N; i++)   // vertex
 	{
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	outfile << "usemtl xy" << std::endl;
+//	outfile << "usemtl xy" << std::endl;
 	for (int i = 0; i < N; i++)
 	{
 		for (int k = 1; k <= 2; k++)  // xy
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	outfile << "usemtl yz" << std::endl;
+//	outfile << "usemtl yz" << std::endl;
 	for (int i = 0; i < N; i++)
 	{
 		for (int k = 3; k <= 4; k++) // xz
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	outfile << "usemtl xz" << std::endl;
+//	outfile << "usemtl xz" << std::endl;
 	for (int i = 0; i < N; i++)
 	{
 		for (int k = 5; k <= 6; k++) // yz
